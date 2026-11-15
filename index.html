@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype a mobile app with Lovable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --surface:#161b22; --surface2:#1f2630; --border:#30363d;
+  --text:#e6edf3; --muted:#9ea7b3; --accent:#58a6ff; --accent-ink:#0d1117;
+  --tip-bg:#0f2a1d; --tip-border:#2ea043; --tip-label:#56d364;
+  --warn-bg:#2d2208; --warn-border:#d29922; --warn-label:#e3b341;
+  --note-bg:#0c2340; --note-border:#388bfd; --note-label:#79c0ff;
+  --focus:#ffbf47; --reading:#1c2d44;
+  --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+:root[data-theme="light"]{
+  --bg:#ffffff; --surface:#f6f8fa; --surface2:#eaeef2; --border:#d0d7de;
+  --text:#1f2328; --muted:#57606a; --accent:#0757c2; --accent-ink:#ffffff;
+  --tip-bg:#e6f6ea; --tip-border:#1a7f37; --tip-label:#116329;
+  --warn-bg:#fff5d6; --warn-border:#9a6700; --warn-label:#7a5200;
+  --note-bg:#e7f0fd; --note-border:#0969da; --note-label:#0550ae;
+  --focus:#b35900; --reading:#dbe9fb;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.6}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--accent-ink);padding:8px 14px;z-index:100}
+.skip:focus{left:8px;top:8px}
+code,kbd,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+
+/* Header */
+header.top{border-bottom:1px solid var(--border);background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.hero{padding-top:28px;padding-bottom:18px}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:clamp(1.6rem,3.5vw,2.3rem);line-height:1.2;margin:0 0 8px}
+.lede{color:var(--muted);margin:0 0 14px;max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.meta li{font-family:var(--mono);font-size:.8rem;border:1px solid var(--border);border-radius:999px;padding:3px 10px;background:var(--bg)}
+
+.overview{margin:14px 0 6px}
+.overview h2{font-size:1.05rem;margin:0 0 8px;display:flex;align-items:center;gap:10px}
+.overview h2 .mono{font-size:.75rem;color:var(--muted);font-weight:400;border:1px solid var(--border);border-radius:999px;padding:1px 8px}
+.overview video{display:block;width:100%;aspect-ratio:16/9;background:#0d1117;border:1px solid var(--border);border-radius:12px}
+.overview p{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+@media print{.overview{display:none}}
+
+/* Toolbar */
+.toolbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
+.toolbar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-top:10px;padding-bottom:10px}
+.progress-box{flex:1 1 220px;min-width:180px}
+.progress-label{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-bottom:4px}
+.bar{height:8px;background:var(--surface2);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+.bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button,select{font:inherit;font-size:.9rem;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;min-height:40px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button:disabled{opacity:.45;cursor:not-allowed}
+.audio-settings{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.audio-settings label{font-size:.85rem;color:var(--muted)}
+.audio-settings select{max-width:220px}
+input[type=range]{accent-color:var(--accent);width:100px}
+.info{position:relative;display:inline-block}
+.info button{width:32px;min-height:32px;padding:0;border-radius:50%;font-family:var(--mono);font-weight:600}
+.info .tip{display:none;position:absolute;right:0;top:38px;width:260px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30}
+.info.open .tip{display:block}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);cursor:pointer}
+.switch input{width:18px;height:18px;accent-color:var(--accent)}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:260px 1fr;gap:28px;padding-top:24px;padding-bottom:60px}
+nav.toc{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:12px}
+nav.toc h2{font-size:.8rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:4px 6px 8px}
+nav.toc .part{font-size:.78rem;color:var(--muted);margin:12px 6px 4px;font-weight:700}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc a{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:6px;color:var(--text);text-decoration:none;font-size:.88rem;line-height:1.35}
+nav.toc a:hover{background:var(--surface2)}
+nav.toc a[aria-current="step"]{background:var(--surface2);box-shadow:inset 3px 0 0 var(--accent)}
+nav.toc .n{font-family:var(--mono);font-size:.75rem;color:var(--muted);min-width:20px}
+nav.toc .done-mark{margin-left:auto;color:var(--tip-label);font-size:.8rem}
+.toc-toggle{display:none}
+
+/* Step cards */
+.part-heading{font-size:1rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:8px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin:0 0 22px;transition:background .2s}
+.step.reading{background:var(--reading)}
+.step-head{display:flex;gap:14px;align-items:flex-start}
+.badge{flex:none;font-family:var(--mono);font-weight:600;font-size:.95rem;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}
+.step h2{font-size:1.3rem;line-height:1.3;margin:6px 0 0}
+.step .body{margin-top:12px}
+.step .body p{margin:0 0 10px}
+.step .body ul,.step .body ol{margin:0 0 10px;padding-left:22px}
+.callout{border:1px solid;border-left-width:5px;border-radius:8px;padding:10px 14px;margin:12px 0}
+.callout strong.label{display:block;font-family:var(--mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-border)} .callout.tip .label{color:var(--tip-label)}
+.callout.warning{background:var(--warn-bg);border-color:var(--warn-border)} .callout.warning .label{color:var(--warn-label)}
+.callout.note{background:var(--note-bg);border-color:var(--note-border)} .callout.note .label{color:var(--note-label)}
+.callout p{margin:0}
+.shots{display:grid;gap:14px;margin-top:14px}
+.shots.two{grid-template-columns:1fr}
+.shots.phone{grid-template-columns:minmax(0,300px);justify-content:center}
+figure{margin:0}
+.shot-btn{display:block;width:100%;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg);overflow:hidden;cursor:zoom-in;min-height:0}
+.shot-btn img{display:block;width:100%;height:auto}
+figcaption{font-size:.82rem;color:var(--muted);margin-top:6px}
+.prompt-box{position:relative;margin:12px 0}
+.prompt-box pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;max-height:260px;overflow:auto;white-space:pre-wrap;font-family:var(--mono);font-size:.8rem;line-height:1.55;margin:0}
+.prompt-box .copy{position:absolute;top:8px;right:8px;min-height:32px;padding:4px 10px;font-size:.8rem}
+.step-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.narr{display:flex;gap:6px;align-items:center}
+.narr .lbl{font-size:.8rem;color:var(--muted);font-family:var(--mono);margin-right:4px}
+.done{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer}
+.done input{width:20px;height:20px;accent-color:var(--tip-border)}
+.pager{display:flex;justify-content:space-between;gap:10px;margin:6px 0 24px}
+
+/* Mode handling */
+body.mode-step .step,body.mode-step .part-heading,body.mode-step .after{display:none}
+body.mode-step .step.current{display:block}
+body.mode-step .part-heading.current{display:block}
+body.mode-step.at-end .after{display:block}
+body.mode-all .pager{display:none}
+
+/* After-steps section */
+.after h2{font-size:1.3rem;margin:28px 0 10px}
+.after h3{font-size:1.05rem;margin:18px 0 6px}
+.after .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--surface2)}
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:calc(100vh - 90px);border-radius:8px;background:#fff}
+.lightbox .close{position:absolute;top:14px;right:14px;background:#fff;color:#111;border-color:#fff;font-weight:700}
+.lightbox p{position:absolute;bottom:12px;left:20px;right:20px;color:#eee;text-align:center;font-size:.9rem;margin:0}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  nav.toc{position:static;max-height:none;display:none}
+  nav.toc.open{display:block}
+  .toc-toggle{display:inline-block}
+  .shots.two{grid-template-columns:1fr}
+  .step{padding:18px 16px}
+  .toolbar{position:static}
+}
+@media print{
+  .toolbar,nav.toc,.step-foot,.pager,.skip,.toc-toggle,.prompt-box .copy{display:none!important}
+  body{background:#fff;color:#000;font-size:12pt}
+  .step,.part-heading,.after{display:block!important}
+  .step{break-inside:avoid;border:1px solid #999;background:#fff}
+  .layout{display:block}
+  .shot-btn{border:1px solid #999}
+  .shots.phone{grid-template-columns:minmax(0,220px);justify-content:center}
+  .prompt-box pre{max-height:none}
+}
+</style>
+</head>
+<body class="mode-step">
+<a class="skip" href="#main">Skip to the guide</a>
+
+<header class="top">
+  <div class="wrap hero">
+    <p class="eyebrow">UX module · Prototyping guide</p>
+    <h1>Prototype a mobile app with Lovable</h1>
+    <p class="lede">Build a simple app with Lovable, publish it, and put it on your phone so you can test it like a real app. No coding, no GitHub and no app store.</p>
+    <ul class="meta">
+      <li>About 30–40 minutes</li>
+      <li id="metaSteps">19 steps</li>
+      <li>Free Lovable account</li>
+      <li>Phone with Chrome or Safari</li>
+    </ul>
+  </div>
+</header>
+
+<div class="toolbar" role="region" aria-label="Guide controls">
+  <div class="wrap">
+    <button class="toc-toggle" id="tocToggle" aria-expanded="false" aria-controls="toc">Steps</button>
+    <div class="progress-box">
+      <div class="progress-label" id="progressLabel">Step 1 of 19</div>
+      <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
+    </div>
+    <div class="seg" role="group" aria-label="View mode">
+      <button id="modeStep" aria-pressed="true">Step by step</button>
+      <button id="modeAll" aria-pressed="false">Show all</button>
+    </div>
+    <div class="audio-settings">
+      <label for="voiceSel">Voice</label>
+      <select id="voiceSel"><option>Loading voices…</option></select>
+      <label for="rate">Speed <span id="rateVal" class="mono">1×</span></label>
+      <input type="range" id="rate" min="0.75" max="1.5" step="0.05" value="1">
+      <label class="switch"><input type="checkbox" id="autoplay"> Auto-play</label>
+      <div class="info" id="voiceInfo">
+        <button aria-expanded="false" aria-controls="voiceTip" aria-label="About voices">i</button>
+        <div class="tip" id="voiceTip" role="note">The voices on offer depend on your browser and device. Edge and Chrome usually have the most natural ones. Everything that is read aloud is also written on the page.</div>
+      </div>
+    </div>
+    <button id="themeBtn" aria-pressed="false">Light mode</button>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <nav class="toc" id="toc" aria-label="Steps"></nav>
+  <main id="main" tabindex="-1">
+    <div id="steps"></div>
+    <div class="pager">
+      <button id="prevBtn">← Previous</button>
+      <button id="nextBtn" class="primary">Next →</button>
+    </div>
+
+    <section class="after" aria-labelledby="afterTitle">
+      <h2 id="afterTitle">After the steps</h2>
+
+      <div class="card">
+        <h3>iPhone: add the app to your home screen</h3>
+        <ol>
+          <li>Open your published <code>lovable.app</code> address in <strong>Safari</strong>. Chrome on iPhone can't add home-screen shortcuts.</li>
+          <li>Tap the <strong>Share</strong> button (a square with an arrow pointing up).</li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong>. The icon appears on your home screen and opens without the address bar.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Update the app after changes</h3>
+        <ol>
+          <li>Make your changes in the Lovable chat.</li>
+          <li>Click <strong>Publish</strong>, then publish your changes. A dot on the Publish button means you have changes that aren't live yet.</li>
+          <li>On your phone, close the app fully and open it again. If you still see the old version, reload the page.</li>
+        </ol>
+        <p>You don't need to add the app to your home screen again.</p>
+      </div>
+
+      <div class="card">
+        <h3>Share with your test users</h3>
+        <p>Give testers your published address and the phone steps above (Steps 15–19, or the iPhone steps). A Public site can be seen by anyone with the link. You can change this from the visibility option in the Publish panel.</p>
+        <div class="callout tip"><strong class="label">Tip</strong><p>Test data resets. The Closet app keeps changes in the page only, so anything a tester adds disappears when the page reloads. That's fine for a test, but tell your testers so they aren't surprised.</p></div>
+      </div>
+
+      <div class="card">
+        <h3>Troubleshooting</h3>
+        <table>
+          <thead><tr><th scope="col">Problem</th><th scope="col">What to try</th></tr></thead>
+          <tbody>
+            <tr><td>Daily credits are at 0</td><td>Wait for the reset at midnight UTC. Your project and published site are not affected.</td></tr>
+            <tr><td>The live site shows the old version</td><td>Publish your changes, then close and reopen the app on your phone.</td></tr>
+            <tr><td>No "Add to Home Screen" on iPhone</td><td>Open the link in <strong>Safari</strong>, not Chrome.</td></tr>
+            <tr><td>The app opens with a browser address bar</td><td>Remove the icon and add it again from the published address, choosing <strong>Install page as app</strong>.</td></tr>
+            <tr><td>The preview says "Still building?"</td><td>Click <strong>Keep building</strong>. Lovable pauses the preview when you're away and nothing is lost.</td></tr>
+            <tr><td>A change broke the app</td><td>Open <strong>History</strong> next to the project name and restore an earlier version.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Good to know</h3>
+        <ul>
+          <li><strong>Free plan limits:</strong> no custom domain, and the code is read-only.</li>
+          <li><strong>It's a website, not a native app:</strong> no app store listing and no push notifications.</li>
+          <li><strong>Lovable names your project for you</strong> (ours was "Screenshot To Soul"). You can rename it from the project name menu.</li>
+        </ul>
+        <p>Sources: <a href="https://lovable.dev/pricing">Lovable pricing</a> · <a href="https://docs.lovable.dev/introduction/plans-and-credits">Plans and credits</a> · <a href="https://docs.lovable.dev/features/publish">Publish your project</a> · <a href="https://docs.lovable.dev/features/projects/history">Version history</a></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged screenshot">
+  <button class="close" id="lbClose">Close (Esc)</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+</div>
+
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+const CLOSET_PROMPT = `Build a mobile-first wardrobe organization app called "Closet" as a responsive web app, designed for a phone-sized screen (390px wide) with a persistent bottom tab bar for navigation. Use a clean, modern look: soft neutral background (warm off-white), one accent colour (deep teal), rounded cards, generous spacing, and a clear sans-serif font. Use sample data throughout so every screen looks populated from the start.
+
+The app has exactly four screens:
+
+1. HOME (Dashboard)
+- Greeting header and today's date
+- "Today's outfit suggestion" card showing a top, bottom and shoes as small image tiles, with a "Wear this" button and a "Shuffle" button
+- Quick stats row: total items, outfits saved, items not worn in 30+ days
+- "Recently added" horizontal scroll of 5 item cards
+
+2. WARDROBE (Browse items)
+- Search bar at the top
+- Horizontally scrollable category chips: All, Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories
+- Two-column grid of item cards, each showing a photo placeholder, item name, colour dot and a favourite heart toggle
+- Floating "+" button that opens the Add Item screen
+- Tapping a card opens a bottom sheet with item details (category, colour, season, times worn, "Mark as worn" button)
+
+3. ADD ITEM (Form)
+- Photo upload area with a camera icon (placeholder is fine)
+- Fields: item name, category dropdown, colour picker (swatches), season selector (Spring, Summer, Autumn, Winter, All-year), brand (optional), notes
+- "Save item" button that adds the item to the Wardrobe grid and shows a confirmation toast
+- Basic validation: name and category are required
+
+4. OUTFITS (Saved looks)
+- Segmented control at the top: "Saved" and "Planner"
+- Saved: list of outfit cards, each showing the combined item thumbnails, outfit name and occasion tag (Work, Casual, Evening, Gym)
+- Planner: a simple weekly view (Mon–Sun) where each day shows an assigned outfit or an "Add outfit" button
+- "Create outfit" button that lets the user pick items from their wardrobe
+
+Navigation: bottom tab bar with four icons and labels (Home, Wardrobe, Add, Outfits). Highlight the active tab in the accent colour. The Add Item screen is the third tab.
+
+Technical notes: use React with Tailwind and shadcn/ui components, store all data in local state (no backend or login needed yet), and make sure touch targets are at least 44px and text meets accessible contrast.`;
+
+/* ===== Edit steps and narration here ===== */
+const PARTS = ["Introduction","Part 1: Build the app","Part 2: Publish","Part 3: Put it on your phone"];
+const STEPS = [
+ {part:0,title:"Introduction: what is Lovable?",
+  video:true,
+  body:`<div class="callout note"><strong class="label">What is Lovable?</strong><p>Lovable is an AI app builder. You describe what you want in plain English, and it builds a working website or app that you can click through, change and share with a link. You don't need to write any code.</p></div>
+  <p><strong>Why it's useful for user experience (UX) design:</strong> you can turn an idea into a realistic, interactive prototype in minutes, put it on a real phone and test it with real users. Then you can change it from their feedback and publish a new version the same day.</p>
+  <p><strong>Why it's useful if you don't code:</strong> you can build websites, apps and simple systems for projects, portfolios or a business idea just by describing them. That lets you focus on the users, the content and the design rather than the programming.</p>`,
+  narration:"Start by watching the overview video. Lovable is an AI app builder. You describe what you want in plain English, and it builds a working website or app, with no coding. For user experience design, that means you can create a realistic prototype in minutes, test it on a real phone with real users, and update it from their feedback. And if you don't code, you can still build websites, apps and simple systems for your projects."},
+
+ {part:1,title:"Go to lovable.dev",
+  body:`<p>Open <a href="https://lovable.dev">lovable.dev</a> in your browser and click <strong>Get started</strong> in the top-right corner.</p>`,
+  shots:[{src:"01-homepage.png",alt:"The Lovable homepage with the heading 'Build something Lovable', a prompt box in the centre, and the Log in and Get started buttons at the top right."}],
+  narration:"Open lovable dot dev in your browser. On the homepage, click the Get started button in the top-right corner."},
+
+ {part:1,title:"Create your free account",
+  body:`<p>Choose <strong>Continue with Google</strong>, <strong>Continue with Apple</strong>, or enter an email address and password, then click <strong>Create your account</strong>.</p>
+  <p>The free plan needs no credit card. It gives you <strong>5 build credits a day</strong> (up to 30 a month). Daily credits reset at midnight UTC and don't carry over, so use them as you go.</p>`,
+  callouts:[{type:"note",text:"You don't need GitHub for this guide, so you can ignore <strong>Continue with GitHub</strong> unless you already use it."}],
+  shots:[{src:"02-create-account.png",alt:"The Create your account screen with Continue with Google, GitHub and Apple buttons, then email and password fields (blurred here) and a Create your account button."}],
+  narration:"Create your free account. You can continue with Google or Apple, or use an email address and password. The free plan needs no credit card and gives you five build credits a day, which reset at midnight UTC. You don't need GitHub for this guide."},
+
+ {part:1,title:"Answer the welcome questions",
+  body:`<p>Lovable asks a few quick questions: <strong>Pick your style</strong> (Light or Dark), your name, which role fits you best, and how many people work at your company. Choose whatever fits, for example <strong>Designer</strong> and <strong>Solo</strong>, and click <strong>Next</strong> each time.</p>`,
+  callouts:[{type:"tip",text:"Your answers only personalise Lovable. They don't change what you can build."}],
+  shots:[{src:"03a-pick-style.png",alt:"The 'Pick your style' screen showing Light and Dark theme options with a Next button."},
+         {src:"03b-pick-role.png",alt:"The 'Which role fits you best?' screen with options including Founder, Product, Designer and Engineer. Designer is highlighted."}],
+  narration:"Lovable asks a few welcome questions: light or dark style, your name, your role, and how big your company is. Pick whatever fits, for example Designer and Solo, and click Next each time. Your answers don't change what you can build."},
+
+ {part:1,title:"Find the prompt box",
+  body:`<p>You land on the dashboard, which asks <strong>"What's the vision?"</strong>. The box in the middle is where you describe the app you want Lovable to build.</p>
+  <p>Check it is set to <strong>Build</strong> (bottom right of the box).</p>`,
+  shots:[{src:"04-dashboard.png",alt:"The Lovable dashboard with a sidebar on the left (New, Search, Projects, Connectors) and a central prompt box under the heading 'What's the vision, Martin?'. Build is selected in the box."}],
+  narration:"You now land on the dashboard, which asks what's the vision. The box in the middle is where you describe your app. Check that it's set to Build, at the bottom right of the box."},
+
+ {part:1,title:"Paste a clear prompt",
+  body:`<p>Describe your screens, navigation and look, and say it is for a <strong>phone-sized screen</strong>. A specific prompt gives a better first result and uses fewer credits. Here is the prompt we used for a wardrobe app called Closet:</p>
+  <div class="prompt-box"><button class="copy" data-copy="prompt">Copy prompt</button><pre id="closetPrompt"></pre></div>
+  <p>If you paste a long prompt, Lovable turns it into an <strong>attachment</strong> above the box. Click it to check the text, then press the send arrow.</p>`,
+  callouts:[{type:"tip",text:"If the first result is messy, build in stages: paste only the Home and Wardrobe screens first, then follow up with \"Now add the Add Item screen\", and so on."}],
+  shots:[{src:"05a-prompt-attached.png",alt:"The prompt box with a long prompt attached as a markdown file named 'Build a mobile-first…', ready to send."},
+         {src:"05b-attachment-preview.png",alt:"The attachment preview panel showing the full Closet prompt text, with Remove attachment, Copy text, Insert as text and Edit buttons."}],
+  narration:"Paste a clear prompt that describes your screens, navigation and look, and says it's for a phone-sized screen. You can copy our Closet prompt from the box on the page. A long prompt becomes an attachment. Click it to check the text, then press send."},
+
+ {part:1,title:"Check the preview",
+  body:`<p>After a minute or two, your app appears in the <strong>Preview</strong> on the right. The chat on the left explains what Lovable built.</p>
+  <p>To see it at phone size, use the device toggle above the preview and choose <strong>Mobile</strong>.</p>
+  <p>Then improve it with <strong>small requests, one change per message</strong>, for example "Make the item cards rounder" or "Change the accent colour to dark green".</p>`,
+  callouts:[{type:"note",text:"Read Lovable's notes in the chat. Ours warned: <em>\"Nothing is saved yet: your changes are lost when the page reloads.\"</em> That's normal for a prototype."},
+            {type:"tip",text:"If a change goes wrong, open <strong>History</strong> next to the project name and restore an earlier version."}],
+  shots:[{src:"06-first-preview.png",alt:"The Lovable editor. The chat is on the left and the Preview on the right shows the Closet app home screen: Good afternoon, Today's outfit suggestion, stats cards and Recently added items, with a bottom tab bar."}],
+  narration:"After a minute or two, your app appears in the preview on the right, and the chat explains what was built. Switch the preview to Mobile to see it at phone size. Then improve it with small requests, one change per message. If something goes wrong, use History to go back."},
+
+ {part:1,title:"Check your credits",
+  body:`<p>Click your workspace name (top left) to see how many <strong>Credits</strong> are left. For more detail, open <strong>Workspace settings</strong>, then <strong>Plans &amp; credit usage</strong>.</p>
+  <ul>
+    <li><strong>Daily build credits</strong>: your free credits for today</li>
+    <li><strong>Credits</strong>: any separate balance you have</li>
+    <li><strong>Usage</strong>: how many credits each project has used</li>
+  </ul>`,
+  callouts:[{type:"tip",text:"Small, focused requests cost less than big multi-part ones. Your numbers may differ from the screenshot."}],
+  shots:[{src:"08a-credits-menu.png",alt:"The workspace menu open at the top left, showing Free Plan, a Credits bar with 18.4 left, and the note 'Daily credits reset at midnight UTC'."},
+         {src:"08b-plans-credit-usage.png",alt:"The Plans and credit usage page showing Lovable Free, Credits 18.4 left, Daily build credits 0 left, and a Usage panel listing the project's credits used."}],
+  narration:"Check your credits by clicking your workspace name at the top left. For more detail, open Workspace settings, then Plans and credit usage. It shows today's free build credits, any other balance, and how much each project has used."},
+
+ {part:2,title:"Click Publish",
+  body:`<p>When you're happy with the app, click the blue <strong>Publish</strong> button at the top right of the editor.</p>`,
+  callouts:[{type:"warning",text:"Use the <strong>Publish</strong> button, not a chat message. Publishing from the button doesn't use credits, and it works even when your credits are at zero."}],
+  shots:[{src:"09-publish-button.png",alt:"The editor toolbar at the top right with Share, Upgrade and Publish buttons. A tooltip on Publish reads 'Publish your project'."}],
+  narration:"When you're happy with your app, click the blue Publish button at the top right. Use the button rather than a chat message. Publishing from the button doesn't use any credits."},
+
+ {part:2,title:"Check your website address",
+  body:`<p>The panel shows <strong>Not published</strong> and your <strong>Website URL</strong>, something like <code>your-project.lovable.app</code>. Click the pencil icon if you want to change the name.</p>
+  <p>Below it you can see who can view the site (<strong>Visible to anyone with the link</strong>) and a security check (<strong>No security issues found</strong>).</p>`,
+  shots:[{src:"10-publish-panel.png",alt:"The Publish panel showing 'Not published', a Website URL ending in lovable.app with a pencil edit icon, 'Visible to anyone with the link', 'No security issues found', and a Publish button."}],
+  narration:"The panel shows your website address, ending in lovable dot app. Click the pencil to change the name if you like. Below it you can see who can view the site, and the result of a security check."},
+
+ {part:2,title:"Choose who can view it",
+  body:`<p>Click <strong>Visible to anyone with the link</strong> to open <strong>Who can view your site?</strong>. For user testing, choose <strong>Public</strong> (anyone with the link) so your testers can open it. Click <strong>Done</strong>.</p>`,
+  callouts:[{type:"note",text:"The workspace-only option needs a Business plan, so on the free plan it's greyed out."}],
+  shots:[{src:"11-who-can-view.png",alt:"The 'Who can view your site?' panel with Public (anyone with the link) selected, a greyed-out workspace option marked Business, Invite only, and Back and Done buttons."}],
+  narration:"Click the visibility line to choose who can view your site. For user testing, pick Public, so anyone with the link can open it, then click Done."},
+
+ {part:2,title:"Publish and visit your site",
+  body:`<p>Click <strong>Publish</strong>. You'll see <strong>Publishing project…</strong>, then <strong>Your website is live</strong>. Click <strong>Visit site</strong> to open it in a new tab.</p>
+  <p>The live site is a <strong>snapshot</strong> of the moment you published. Later edits only appear after you publish again.</p>`,
+  callouts:[{type:"tip",text:"There's no save button in Lovable. Every change is stored in your account automatically."}],
+  shots:[{src:"12a-publishing.png",alt:"The panel showing 'Publishing project…' with a progress bar."},
+         {src:"12b-website-live.png",alt:"The panel showing 'Your website is live' with the lovable.app address and Share it and Visit site buttons."}],
+  narration:"Click Publish. After a moment you'll see Your website is live. Click Visit site to open it. The live site is a snapshot, so later edits only appear after you publish again. There's no save button, because Lovable saves every change for you."},
+
+ {part:2,title:"Send it to your phone with a QR code",
+  body:`<p>On the live site in Chrome, click the <strong>QR code</strong> icon in the address bar (or right-click the page and choose <strong>Create QR code for this page</strong>). Scan the code with your phone's camera to open the app there.</p>
+  <p>You can also just type the <code>lovable.app</code> address on your phone, or send it to yourself.</p>`,
+  callouts:[{type:"warning",text:"Only use a QR code for the <strong>published</strong> address, as shown here. The QR code in Lovable's preview opens a development link, which won't work properly as a home-screen app."}],
+  shots:[{src:"13-qr-code.png",alt:"The published Closet app open in Chrome at a lovable.app address, with Chrome's Scan QR Code panel showing a QR code and Copy and Download buttons."}],
+  narration:"On the live site in Chrome, use the QR code option in the address bar, and scan it with your phone's camera. Make sure it's the QR code for the published address, not the one from Lovable's preview."},
+
+ {part:2,title:"Come back later from Projects",
+  body:`<p>You can close the browser at any time. To carry on later:</p>
+  <ol><li>Go to lovable.dev and sign in.</li><li>Click <strong>Projects</strong> in the sidebar.</li><li>Open your project. It shows a <strong>Published</strong> label.</li></ol>`,
+  callouts:[{type:"tip",text:"If the preview says <strong>Still building?</strong> when you return, click <strong>Keep building</strong>. Nothing is lost."}],
+  shots:[{src:"14-projects.png",alt:"The Projects page showing one project card with a thumbnail of the app and a Published label, edited 22 minutes ago."}],
+  narration:"You can close your browser at any time. To carry on later, sign in at lovable dot dev, click Projects in the sidebar, and open your project. If the preview says Still building, click Keep building."},
+
+ {part:3,title:"Open the published address on your phone",
+  body:`<p>Open your <code>lovable.app</code> address in <strong>Chrome</strong> on your Android phone, either from the QR code or by typing it in.</p>
+  <p>On an iPhone, use Safari and follow the <a href="#afterTitle">iPhone steps</a> below instead.</p>`,
+  shots:[{src:"15-phone-open-url.png",alt:"An Android phone showing the Closet app's Wardrobe screen open in Chrome, with the lovable.app address in the address bar."}],
+  phone:true,
+  narration:"Open your published address in Chrome on your Android phone. If you have an iPhone, use Safari and follow the iPhone steps at the end of the guide."},
+
+ {part:3,title:"Open the Chrome menu",
+  body:`<p>Tap the <strong>three-dot menu (⋮)</strong> at the top right, then tap <strong>Install and create shortcut</strong>.</p>`,
+  callouts:[{type:"note",text:"On some phones this is called <strong>Add to Home screen</strong> or <strong>Install app</strong>."}],
+  shots:[{src:"16-chrome-menu.png",alt:"The Chrome menu on Android with options including History, Bookmarks, Share, Translate and 'Install and create shortcut'."}],
+  phone:true,
+  narration:"Tap the three-dot menu at the top right of Chrome, then tap Install and create shortcut. On some phones it's called Add to Home screen, or Install app."},
+
+ {part:3,title:"Install it as an app",
+  body:`<p>Choose <strong>Install page as app</strong>, not <em>Create shortcut</em>. Check the name, then tap <strong>Install</strong>.</p>`,
+  callouts:[{type:"tip",text:"<strong>Install page as app</strong> opens full screen like a real app. <em>Create shortcut</em> just opens Chrome, with the address bar showing."}],
+  shots:[{src:"17a-install-options.png",alt:"The 'Install and create shortcut' sheet with two options: 'Install page as app' and 'Create shortcut, Shortcuts open in Chrome'."},
+         {src:"17b-install-confirm.png",alt:"The 'Install page as app' dialog showing the app name 'Wardrobe — Closet' and its address, with Cancel and Install buttons."}],
+  phone:true,
+  narration:"Choose Install page as app, rather than Create shortcut, so it opens full screen like a real app. Check the name, then tap Install."},
+
+ {part:3,title:"Find the icon on your home screen",
+  body:`<p>The app now has its own icon on your home screen, next to your other apps.</p>`,
+  callouts:[{type:"note",text:"The icon may be a generic Lovable one. That's fine for a prototype."}],
+  shots:[{src:"18-home-screen-icon.png",alt:"An Android home screen with a new icon labelled 'Wardrobe…' showing the Lovable heart logo."}],
+  phone:true,
+  narration:"Your app now has its own icon on your home screen. It may use the Lovable logo, which is fine for a prototype."},
+
+ {part:3,title:"Launch it like a real app",
+  body:`<p>Tap the icon. The app opens <strong>full screen, without the browser address bar</strong>, so it looks and feels like a real app. You're ready to test it with users.</p>`,
+  callouts:[{type:"tip",text:"Before a test session, go through the app yourself once on your phone to check every screen works."}],
+  shots:[{src:"19-app-full-screen.png",alt:"The Closet app running full screen on an Android phone with no browser address bar. The Wardrobe screen shows search, category chips and item cards, with a bottom tab bar."}],
+  phone:true,
+  narration:"Tap the icon. Your app opens full screen, without the browser address bar, so it looks and feels like a real app. Go through it yourself once, and then you're ready to test it with users."}
+];
+/* ===== End of editable content ===== */
+
+const VIDEO_HTML = `<div class="overview">
+  <video id="overviewVideo" controls preload="metadata" playsinline poster="video/lovable-explainer-poster.jpg" aria-label="Overview video: Prototype a mobile app with Lovable (2 minutes 14 seconds)">
+    <source src="video/lovable-explainer.mp4" type="video/mp4">
+    <track kind="captions" src="video/lovable-explainer.vtt" srclang="en" label="English" default>
+    Your browser can't play this video. <a href="video/lovable-explainer.mp4">Download the overview video</a>.
+  </video>
+  <p>Overview video, 2 min 14 s. Captions are on. Use the CC button to turn them off.</p>
+</div>`;
+const $ = s => document.querySelector(s);
+const store = {
+  get(k,d){try{const v=localStorage.getItem('lovableGuide:'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('lovableGuide:'+k,JSON.stringify(v))}catch(e){}}
+};
+const N = STEPS.length;
+let current = 0;
+let mode = 'step';
+const doneSet = new Set(store.get('done',[]));
+
+/* Build steps */
+const stepsEl = $('#steps');
+let lastPart = -1;
+STEPS.forEach((s,i)=>{
+  if(s.part!==lastPart){
+    const h=document.createElement('h2');
+    h.className='part-heading'; h.dataset.part=s.part; h.textContent=PARTS[s.part];
+    stepsEl.appendChild(h); lastPart=s.part;
+  }
+  const num=String(i+1).padStart(2,'0');
+  const art=document.createElement('article');
+  art.className='step'; art.id='step-'+(i+1); art.dataset.index=i;
+  art.setAttribute('aria-labelledby','t'+i);
+  const callouts=(s.callouts||[]).map(c=>`<div class="callout ${c.type}"><strong class="label">${c.type==='warning'?'Warning':c.type==='tip'?'Tip':'Note'}</strong><p>${c.text}</p></div>`).join('');
+  const shotsCls = s.phone ? 'shots phone' : ((s.shots||[]).length>1?'shots two':'shots');
+  const shots=(s.shots||[]).map(sh=>`<figure><button class="shot-btn" data-src="images/${sh.src}" data-alt="${sh.alt.replace(/"/g,'&quot;')}" aria-label="Enlarge screenshot: ${sh.alt.replace(/"/g,'&quot;')}"><img src="images/${sh.src}" alt="${sh.alt.replace(/"/g,'&quot;')}" loading="lazy"></button></figure>`).join('');
+  art.innerHTML=`
+    <div class="step-head"><div class="badge" aria-hidden="true">${num}</div><h2 id="t${i}"><span class="sr">Step ${i+1}: </span>${s.title}</h2></div>
+    ${s.video?VIDEO_HTML:''}
+    <div class="body">${s.body}${callouts}</div>
+    <div class="${shotsCls}">${shots}</div>
+    <div class="step-foot">
+      <div class="narr" role="group" aria-label="Narration for step ${i+1}">
+        <span class="lbl">Listen</span>
+        <button class="play" data-i="${i}" aria-label="Play narration for step ${i+1}">▶ Play</button>
+        <button class="pause" data-i="${i}" aria-label="Pause narration">❚❚ Pause</button>
+        <button class="stop" data-i="${i}" aria-label="Stop narration">■ Stop</button>
+      </div>
+      <label class="done"><input type="checkbox" data-i="${i}" ${doneSet.has(i)?'checked':''}> Mark as done</label>
+    </div>`;
+  art.dataset.narration=s.narration;
+  stepsEl.appendChild(art);
+});
+$('#closetPrompt').textContent=CLOSET_PROMPT;
+$('#metaSteps').textContent=N+' steps';
+
+/* TOC */
+function buildToc(){
+  const toc=$('#toc'); let html='<h2>Steps</h2>'; let lp=-1;
+  STEPS.forEach((s,i)=>{
+    if(s.part!==lp){ if(lp!==-1) html+='</ol>'; html+=`<div class="part">${PARTS[s.part]}</div><ol>`; lp=s.part; }
+    html+=`<li><a href="#step-${i+1}" data-i="${i}"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${s.title}</span><span class="done-mark" aria-label="${doneSet.has(i)?'done':''}">${doneSet.has(i)?'✓':''}</span></a></li>`;
+  });
+  html+='</ol>';
+  toc.innerHTML=html;
+  toc.querySelectorAll('a').forEach(a=>a.addEventListener('click',e=>{
+    const i=+a.dataset.i;
+    if(mode==='step'){e.preventDefault();go(i,true)}
+    if(window.innerWidth<=900){toc.classList.remove('open');$('#tocToggle').setAttribute('aria-expanded','false')}
+  }));
+  markToc();
+}
+function markToc(){
+  document.querySelectorAll('#toc a').forEach(a=>{
+    if(+a.dataset.i===current) a.setAttribute('aria-current','step'); else a.removeAttribute('aria-current');
+  });
+}
+
+/* Navigation */
+function updateProgress(){
+  $('#progressLabel').textContent=`Step ${current+1} of ${N} · ${doneSet.size} done`;
+  $('#progressBar').style.width=((current+1)/N*100)+'%';
+}
+function go(i,focus){
+  stopNarration();
+  current=Math.max(0,Math.min(N-1,i));
+  document.querySelectorAll('.step').forEach(el=>el.classList.toggle('current',+el.dataset.index===current));
+  document.querySelectorAll('.part-heading').forEach(h=>h.classList.toggle('current',+h.dataset.part===STEPS[current].part));
+  document.body.classList.toggle('at-end',current===N-1);
+  $('#prevBtn').disabled=current===0;
+  $('#nextBtn').disabled=current===N-1;
+  updateProgress(); markToc();
+  $('#live').textContent=`Step ${current+1} of ${N}: ${STEPS[current].title}`;
+  if(mode==='step'){
+    if(focus){ const h=document.getElementById('t'+current); h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
+    window.scrollTo({top:0});
+    if($('#autoplay').checked) setTimeout(()=>play(current),250);
+  } else if(focus){
+    document.getElementById('step-'+(current+1)).scrollIntoView();
+  }
+}
+$('#prevBtn').onclick=()=>go(current-1,true);
+$('#nextBtn').onclick=()=>go(current+1,true);
+document.addEventListener('keydown',e=>{
+  if($('#lightbox').classList.contains('open')) return;
+  const t=e.target.tagName; if(['INPUT','SELECT','TEXTAREA'].includes(t)) return;
+  if(mode!=='step') return;
+  if(e.key==='ArrowRight'){go(current+1,true)}
+  if(e.key==='ArrowLeft'){go(current-1,true)}
+});
+
+/* Modes */
+function setMode(m){
+  mode=m; stopNarration();
+  document.body.classList.toggle('mode-step',m==='step');
+  document.body.classList.toggle('mode-all',m==='all');
+  $('#modeStep').setAttribute('aria-pressed',m==='step');
+  $('#modeAll').setAttribute('aria-pressed',m==='all');
+  $('#live').textContent=m==='step'?'Step-by-step view':'Showing all steps';
+  if(m==='step') go(current,false);
+}
+$('#modeStep').onclick=()=>setMode('step');
+$('#modeAll').onclick=()=>setMode('all');
+/* Track current step while scrolling in show-all mode */
+const io=new IntersectionObserver(entries=>{
+  if(mode!=='all') return;
+  entries.forEach(en=>{ if(en.isIntersecting){ current=+en.target.dataset.index; updateProgress(); markToc(); } });
+},{rootMargin:'-40% 0px -55% 0px'});
+document.querySelectorAll('.step').forEach(el=>io.observe(el));
+
+/* Done checkboxes */
+document.querySelectorAll('.done input').forEach(cb=>cb.addEventListener('change',()=>{
+  const i=+cb.dataset.i; cb.checked?doneSet.add(i):doneSet.delete(i);
+  store.set('done',[...doneSet]); buildToc(); updateProgress();
+}));
+
+/* Copy prompt */
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+  try{ await navigator.clipboard.writeText(CLOSET_PROMPT); b.textContent='Copied ✓'; }
+  catch(e){ const r=document.createRange(); r.selectNodeContents($('#closetPrompt')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='Selected – press Ctrl/Cmd+C'; }
+  $('#live').textContent='Prompt copied';
+  setTimeout(()=>b.textContent='Copy prompt',2500);
+}));
+
+/* Theme (follows device setting on load; not remembered) */
+const root=document.documentElement;
+function setTheme(t){
+  root.dataset.theme=t;
+  const light=t==='light';
+  $('#themeBtn').textContent=light?'Dark mode':'Light mode';
+  $('#themeBtn').setAttribute('aria-pressed',light);
+}
+setTheme(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+$('#themeBtn').onclick=()=>setTheme(root.dataset.theme==='light'?'dark':'light');
+
+/* TOC toggle (mobile) */
+$('#tocToggle').onclick=()=>{const o=$('#toc').classList.toggle('open');$('#tocToggle').setAttribute('aria-expanded',o)};
+
+/* Voice info tooltip */
+const vi=$('#voiceInfo'), viBtn=vi.querySelector('button');
+viBtn.onclick=()=>{const o=vi.classList.toggle('open');viBtn.setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!vi.contains(e.target)){vi.classList.remove('open');viBtn.setAttribute('aria-expanded','false')}});
+
+/* Lightbox */
+const lb=$('#lightbox'); let lbReturn=null;
+function openLb(src,alt,from){ lbReturn=from; $('#lbImg').src=src; $('#lbImg').alt=alt; $('#lbCap').textContent=alt; lb.classList.add('open'); $('#lbClose').focus(); }
+function closeLb(){ lb.classList.remove('open'); if(lbReturn) lbReturn.focus(); }
+document.querySelectorAll('.shot-btn').forEach(b=>b.addEventListener('click',()=>openLb(b.dataset.src,b.dataset.alt,b)));
+$('#lbClose').onclick=closeLb;
+lb.addEventListener('click',e=>{if(e.target===lb||e.target.id==='lbImg') closeLb()});
+document.addEventListener('keydown',e=>{
+  if(!lb.classList.contains('open')) return;
+  if(e.key==='Escape') closeLb();
+  if(e.key==='Tab'){ e.preventDefault(); $('#lbClose').focus(); }
+});
+
+/* ===== Narration: audio/NN.mp3 if present, else Web Speech ===== */
+const synth=('speechSynthesis' in window)?window.speechSynthesis:null;
+let voices=[], audioEl=null, readingIdx=null;
+const rateEl=$('#rate'), voiceSel=$('#voiceSel');
+rateEl.value=store.get('rate',1); $('#rateVal').textContent=(+rateEl.value).toFixed(2).replace(/\.?0+$/,'')+'×';
+rateEl.oninput=()=>{ $('#rateVal').textContent=(+rateEl.value).toFixed(2).replace(/\.?0+$/,'')+'×'; store.set('rate',+rateEl.value); if(audioEl) audioEl.playbackRate=+rateEl.value; };
+
+function loadVoices(){
+  if(!synth) return;
+  voices=synth.getVoices();
+  if(!voices.length) return;
+  const en=voices.filter(v=>/^en/i.test(v.lang)).sort((a,b)=>(a.lang===b.lang?a.name.localeCompare(b.name):a.lang.localeCompare(b.lang)));
+  const other=voices.filter(v=>!/^en/i.test(v.lang));
+  const saved=store.get('voice',null);
+  const opt=v=>`<option value="${v.name.replace(/"/g,'&quot;')}">${v.name} (${v.lang})</option>`;
+  voiceSel.innerHTML=`<optgroup label="English">${en.map(opt).join('')}</optgroup>`+(other.length?`<optgroup label="Other languages">${other.map(opt).join('')}</optgroup>`:'');
+  let pick=saved&&voices.find(v=>v.name===saved);
+  if(!pick) pick=en.find(v=>/en[-_]GB/i.test(v.lang))||en[0]||voices[0];
+  if(pick) voiceSel.value=pick.name;
+}
+if(synth){ loadVoices(); synth.addEventListener?synth.addEventListener('voiceschanged',loadVoices):(synth.onvoiceschanged=loadVoices); }
+else { voiceSel.innerHTML='<option>No voices available</option>'; voiceSel.disabled=true; }
+voiceSel.onchange=()=>store.set('voice',voiceSel.value);
+setTimeout(()=>{ if(synth && !voices.length){ voiceSel.innerHTML='<option value="">Default voice</option>'; } },2500);
+
+function setReading(i){
+  document.querySelectorAll('.step.reading').forEach(el=>el.classList.remove('reading'));
+  readingIdx=i;
+  if(i!==null) document.getElementById('step-'+(i+1)).classList.add('reading');
+}
+function speak(i){
+  if(!synth){ setReading(null); return; }
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(STEPS[i].narration);
+  const v=voices.find(v=>v.name===voiceSel.value); if(v){u.voice=v;u.lang=v.lang} else u.lang='en-GB';
+  u.rate=+rateEl.value;
+  u.onend=u.onerror=()=>{ if(readingIdx===i) setReading(null) };
+  setReading(i); synth.speak(u);
+}
+function play(i){
+  // resume if paused on the same step
+  if(readingIdx===i){
+    if(audioEl&&audioEl.paused){audioEl.play();return}
+    if(synth&&synth.paused){synth.resume();return}
+  }
+  stopNarration();
+  const a=new Audio('audio/'+String(i+1).padStart(2,'0')+'.mp3');
+  a.playbackRate=+rateEl.value;
+  let fellBack=false;
+  const fallback=()=>{ if(fellBack) return; fellBack=true; if(audioEl===a) audioEl=null; speak(i); };
+  a.addEventListener('error',fallback);
+  a.addEventListener('ended',()=>{ if(readingIdx===i) setReading(null); audioEl=null; });
+  audioEl=a; setReading(i);
+  const p=a.play(); if(p&&p.catch) p.catch(fallback);
+}
+function pauseNarration(){ if(audioEl&&!audioEl.paused) audioEl.pause(); else if(synth&&synth.speaking) synth.pause(); }
+function stopNarration(){ if(audioEl){audioEl.pause();audioEl=null} if(synth) synth.cancel(); setReading(null); }
+document.querySelectorAll('.play').forEach(b=>b.onclick=()=>play(+b.dataset.i));
+document.querySelectorAll('.pause').forEach(b=>b.onclick=pauseNarration);
+document.querySelectorAll('.stop').forEach(b=>b.onclick=stopNarration);
+if(!synth){ /* hide play only where no MP3 can be found */
+  STEPS.forEach((s,i)=>{ const a=new Audio(); a.preload='metadata'; a.src='audio/'+String(i+1).padStart(2,'0')+'.mp3';
+    a.onerror=()=>{ const g=document.querySelector(`#step-${i+1} .narr`); if(g) g.style.display='none'; }; });
+}
+
+const ov=document.getElementById('overviewVideo');
+if(ov) ov.addEventListener('play',stopNarration);
+document.querySelectorAll('.play').forEach(b=>b.addEventListener('click',()=>{ if(ov&&!ov.paused) ov.pause(); }));
+
+buildToc();
+go(0,false);
+</script>
+</body>
+</html>
